@@ -765,7 +765,9 @@ input[type=range].vol-slider::-moz-range-thumb {
     return false;
   };
 
-  function atTarget(e) { return e.x === e.tx && e.y === e.ty; }
+  function atTarget(e) {
+    return Math.abs(e.x - e.tx) < 0.001 && Math.abs(e.y - e.ty) < 0.001;
+  }
 
   function wrap(e) {
     if (e.x < 0) { e.x += W; e.tx += W; }
@@ -777,6 +779,7 @@ input[type=range].vol-slider::-moz-range-thumb {
     let guard = 0;
     while (step > 0 && guard++ < 8) {
       if (atTarget(e)) {
+        e.x = e.tx; e.y = e.ty;
         wrap(e);
         decide(e);
         if (e.dir.x === 0 && e.dir.y === 0) return;
@@ -784,15 +787,25 @@ input[type=range].vol-slider::-moz-range-thumb {
       }
       const dx = e.tx - e.x, dy = e.ty - e.y;
       const dist = Math.abs(dx) + Math.abs(dy);
-      if (dist <= step) { e.x = e.tx; e.y = e.ty; step -= dist; }
-      else { e.x += Math.sign(dx) * step; e.y += Math.sign(dy) * step; step = 0; }
+      if (dist <= step) {
+        e.x = e.tx; e.y = e.ty;
+        step -= dist;
+      } else {
+        e.x += Math.sign(dx) * step;
+        e.y += Math.sign(dy) * step;
+        step = 0;
+      }
     }
   }
 
   function decideHero(e) {
     const r = Math.round(e.y), c = Math.round(e.x);
-    if (e.next && passHero(r + e.next.y, c + e.next.x)) e.dir = { ...e.next };
-    else if (!passHero(r + e.dir.y, c + e.dir.x)) e.dir = { ...ZERO };
+    e.x = c; e.y = r; e.tx = c; e.ty = r;
+    if (e.next && passHero(r + e.next.y, c + e.next.x)) {
+      e.dir = { ...e.next };
+    } else if (!passHero(r + e.dir.y, c + e.dir.x)) {
+      e.dir = { ...ZERO };
+    }
     if (e.dir.x) e.face = e.dir.x;
     eatAt(r, ((c % W) + W) % W);
   }
@@ -944,7 +957,13 @@ input[type=range].vol-slider::-moz-range-thumb {
       triggerShake(0.22, 0.25);
       spawnSparkles(c, r, 18);
     }
-    if (dots.size === 0) { state = 'clear'; stateTimer = 2.4; stopMusic(); sfxLevelWin(); showOverlay('PAPELADA ZERADA!', 'Fase ' + level + ' concluída. Prepare-se para a próxima.', false); }
+    if (dots.size === 0) {
+      state = 'clear';
+      stateTimer = 2.6;
+      stopMusic();
+      sfxLevelWin();
+      showOverlay('🎉 PARABÉNS! FASE ' + level + ' CONCLUÍDA!', 'Excelente trabalho! Preparando Fase ' + (level + 1) + ' em instantes...', false);
+    }
   }
 
   function addScore(n) {
@@ -1412,6 +1431,17 @@ input[type=range].vol-slider::-moz-range-thumb {
       ctx.fillText('🏃 FUGA EM MASSA: ' + secLeft + 's', (W * s) / 2, s * 0.85);
     }
 
+    if (state === 'clear') {
+      ctx.fillStyle = 'rgba(14,15,17,0.78)';
+      ctx.fillRect(0, 0, W * s, H * s);
+      ctx.fillStyle = '#FFC72C';
+      ctx.font = Math.round(s * 0.65) + "px 'Press Start 2P', monospace";
+      ctx.fillText('★ FASE ' + level + ' VENCIDA! ★', W * s / 2, H * s / 2 - s * 0.4);
+      ctx.fillStyle = '#48BB78';
+      ctx.font = Math.round(s * 0.4) + "px 'Press Start 2P', monospace";
+      ctx.fillText('INICIANDO FASE ' + (level + 1) + '...', W * s / 2, H * s / 2 + s * 0.6);
+    }
+
     if (state === 'paused') {
       ctx.fillStyle = 'rgba(14,15,17,0.78)';
       ctx.fillRect(0, 0, W * s, H * s);
@@ -1449,8 +1479,42 @@ input[type=range].vol-slider::-moz-range-thumb {
   // ---------- Controles ----------
   function steer(name) {
     if (!DIRS[name]) return;
-    if (state === 'ready') newGame();
-    hero.next = { ...DIRS[name] };
+    if (state === 'ready') { newGame(); return; }
+    if (state === 'paused') { togglePause(); return; }
+    if (state === 'clear') { stateTimer = 0; return; }
+    const desired = DIRS[name];
+    hero.next = { ...desired };
+
+    if (state === 'play') {
+      const r = Math.round(hero.y), c = Math.round(hero.x);
+      // Meia-volta imediata
+      if (desired.x === -hero.dir.x && desired.y === -hero.dir.y && (hero.dir.x || hero.dir.y)) {
+        hero.dir = { ...desired };
+        hero.tx = hero.x + desired.x;
+        hero.ty = hero.y + desired.y;
+        if (hero.dir.x) hero.face = hero.dir.x;
+      }
+      // Se estava parado contra uma parede
+      else if (hero.dir.x === 0 && hero.dir.y === 0) {
+        if (passHero(r + desired.y, c + desired.x)) {
+          hero.x = c; hero.y = r;
+          hero.dir = { ...desired };
+          hero.tx = c + desired.x; hero.ty = r + desired.y;
+          if (hero.dir.x) hero.face = hero.dir.x;
+        }
+      }
+      // Cornering (curva antecipada e suave nas esquinas)
+      else if ((desired.x !== 0 && hero.dir.y !== 0) || (desired.y !== 0 && hero.dir.x !== 0)) {
+        if (Math.abs(hero.x - c) < 0.45 && Math.abs(hero.y - r) < 0.45) {
+          if (passHero(r + desired.y, c + desired.x)) {
+            hero.x = c; hero.y = r;
+            hero.dir = { ...desired };
+            hero.tx = c + desired.x; hero.ty = r + desired.y;
+            if (hero.dir.x) hero.face = hero.dir.x;
+          }
+        }
+      }
+    }
   }
   const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
   window.addEventListener('keydown', (e) => {
