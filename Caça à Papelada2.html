@@ -33,23 +33,8 @@ h1 { margin: 0; font-family: var(--pixel); font-weight: 400; font-size: clamp(18
 .lives { display: flex; gap: 4px; min-height: 14px; align-items: center }
 .lives i { width: 14px; height: 12px; display: block; background: var(--red); clip-path: polygon(14% 0, 43% 0, 50% 17%, 57% 0, 86% 0, 100% 17%, 100% 50%, 50% 100%, 0 50%, 0 17%) }
 .stage { width: 100%; display: flex; justify-content: center }
-.screen { position: relative; max-width: 100%; border: 4px solid var(--line); box-shadow: 0 0 25px rgba(255, 199, 44, 0.25), 6px 6px 0 var(--fg); background: var(--screen); border-radius: 4px; overflow: hidden; }
-.screen::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.38) 100%);
-  pointer-events: none;
-  z-index: 5;
-}
-.screen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 2px, transparent 2px, transparent 4px);
-  pointer-events: none;
-  z-index: 6;
-}
+.screen { position: relative; max-width: 100%; border: 4px solid var(--line); box-shadow: 0 0 30px rgba(255, 199, 44, 0.35), 6px 6px 0 var(--fg); background: var(--screen); border-radius: 4px; overflow: hidden; }
+
 canvas { display: block; image-rendering: pixelated; background: var(--screen); touch-action: none; max-width: 100%; }
 .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 20px; background: rgba(14, 15, 17, .82); }
 .overlay h2 { margin: 0; font-family: var(--pixel); font-weight: 400; font-size: clamp(16px, 4.6vw, 24px); line-height: 1.4; color: var(--line); text-wrap: balance }
