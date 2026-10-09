@@ -881,9 +881,21 @@ input[type=range].vol-slider::-moz-range-thumb {
 
   function decideGhost(g) {
     const r = Math.round(g.y), c = ((Math.round(g.x) % W) + W) % W;
-    if (g.mode === 'leaving' && r === EXIT.r && c === EXIT.c) { g.mode = 'chase'; }
+    if (g.mode === 'leaving' && (r <= EXIT.r && c === EXIT.c)) {
+      g.mode = 'chase';
+      // Separação imediata ao sair da jaula para cada fantasma tomar um rumo diferente
+      const fanOutDirs = [DIRS.left, DIRS.right, DIRS.left, DIRS.right];
+      const initial = fanOutDirs[g.i % 4];
+      if (passGhost(g)(r + initial.y, c + initial.x)) {
+        g.dir = { ...initial };
+      }
+    }
     if (g.mode === 'eaten' && r === HOME.r && c === HOME.c) {
-      g.mode = 'waiting'; g.release = clock + 1.2; g.scared = false; g.dir = { ...ZERO }; return;
+      g.mode = 'waiting';
+      g.release = clock + 1.2 + g.i * 0.8;
+      g.scared = false;
+      g.dir = { ...ZERO };
+      return;
     }
     const pass = passGhost(g);
     const opts = [];
@@ -1175,7 +1187,7 @@ input[type=range].vol-slider::-moz-range-thumb {
           reverseGhosts();
           popups.push({ x: bx, y: by, text: '🪪 CRACHÁ: FUJAM 5s!', t: 1.8, color: '#4FC3F7' });
         } else if (perk === 'banish') {
-          // 📠 FAX QUEBRADO: Bane e tranca todos os fantasmas na base por +10s
+          // 📠 FAX QUEBRADO: Bane todos os fantasmas para a base com saída escalonada individual
           for (let i = 0; i < ghosts.length; i++) {
             const g = ghosts[i];
             const homePos = GHOST_STARTS[i] || HOME;
@@ -1183,12 +1195,12 @@ input[type=range].vol-slider::-moz-range-thumb {
             g.tx = homePos.c; g.ty = homePos.r;
             g.dir = { ...ZERO };
             g.mode = 'waiting';
-            g.release = clock + 10.0; // Trancados por 10s
+            g.release = clock + 1.0 + i * 1.8; // Saída escalonada (1.0s, 2.8s, 4.6s, 6.4s) sem sobreposição
             g.scared = false;
           }
           triggerShake(0.35, 0.3);
           spawnPaperExplosion(10, 10, 32, ['#4FC3F7', '#FFC72C', '#F4F1EA']);
-          popups.push({ x: bx, y: by, text: '📠 PAPELADA BANIDA 10s!', t: 2.0, color: '#FF4B3E' });
+          popups.push({ x: bx, y: by, text: '📠 FANTASMAS BANIDOS!', t: 2.0, color: '#FF4B3E' });
         } else if (perk === 'heal') {
           // 🍩 COXINHA DA FIRMA: Recupera vida se < 3, senão super bônus de pontos
           if (lives < 4) {
