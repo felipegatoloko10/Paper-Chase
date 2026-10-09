@@ -325,6 +325,11 @@ input[type=range].vol-slider::-moz-range-thumb {
       setTimeout(() => tone(f, 0.10, 'square', 0.35), i * 65);
     });
   };
+  const sfxStart = () => {
+    [330, 392, 493.88, 587.33, 659.25].forEach((f, i) => {
+      setTimeout(() => tone(f, 0.09, 'square', 0.28), i * 80);
+    });
+  };
   const sfxLevelWin = () => {
     [261.63, 329.63, 392, 523.25].forEach((f, i) => {
       setTimeout(() => tone(f, 0.14, 'square', 0.32), i * 130);
@@ -979,10 +984,9 @@ input[type=range].vol-slider::-moz-range-thumb {
     }
     if (dots.size === 0) {
       state = 'clear';
-      stateTimer = 2.6;
+      stateTimer = 2.2;
       stopMusic();
       sfxLevelWin();
-      showOverlay('🎉 PARABÉNS! FASE ' + level + ' CONCLUÍDA!', 'Excelente trabalho! Preparando Fase ' + (level + 1) + ' em instantes...', false);
     }
   }
 
@@ -1252,7 +1256,15 @@ input[type=range].vol-slider::-moz-range-thumb {
     }
     if (state === 'clear') {
       stateTimer -= dt;
-      if (stateTimer <= 0) { level += 1; buildDots(); resetActors(); updateHud(); hideOverlay(); state = 'play'; sfxStart(); if(!isMuted) startMusic(); }
+      if (stateTimer <= 0) {
+        level += 1;
+        buildDots();
+        resetActors();
+        updateHud();
+        state = 'play';
+        sfxStart();
+        if (!isMuted) startMusic();
+      }
       return;
     }
     if (state !== 'play') return;
