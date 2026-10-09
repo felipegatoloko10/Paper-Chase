@@ -653,7 +653,7 @@ input[type=range].vol-slider::-moz-range-thumb {
   // Pool de Itens Bônus da Firma com Poderes Especiais
   const ALL_BONUSES = [
     { type: 'coffee', name: 'SUPER CAFÉ TURBO', pts: 200, sprite: BONUS_COFFEE, colors: COFFEE_C, perk: 'turbo' },
-    { type: 'badge', name: 'CRACHÁ VIP (FUGA 10s)', pts: 400, sprite: BONUS_BADGE, colors: BADGE_C, perk: 'scare' },
+    { type: 'badge', name: 'CRACHÁ VIP (FUGA 5s)', pts: 400, sprite: BONUS_BADGE, colors: BADGE_C, perk: 'scare' },
     { type: 'fax', name: 'FAX: BANIR PAPELADA!', pts: 600, sprite: BONUS_FAX, colors: FAX_C, perk: 'banish' },
     { type: 'coxinha', name: 'COXINHA DA FIRMA', pts: 800, sprite: BONUS_COXINHA, colors: COXINHA_C, perk: 'heal' }
   ];
@@ -673,21 +673,34 @@ input[type=range].vol-slider::-moz-range-thumb {
     return valid[Math.floor(Math.random() * valid.length)];
   }
 
+  let bonusBag = [];
+  function getNextBonus() {
+    if (!bonusBag || bonusBag.length === 0) {
+      // Sistema Shuffle-Bag (Tetris/Arcade): Garante que TODOS os itens apareçam sem repetição viciada
+      bonusBag = [...ALL_BONUSES];
+      for (let i = bonusBag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bonusBag[i], bonusBag[j]] = [bonusBag[j], bonusBag[i]];
+      }
+    }
+    return bonusBag.pop();
+  }
+
   function spawnBonus() {
     if (activeBonus || state !== 'play') return;
-    const info = ALL_BONUSES[Math.floor(Math.random() * ALL_BONUSES.length)];
+    const info = getNextBonus();
     const pos = getRandomWalkableTile();
     activeBonus = {
       r: pos.r,
       c: pos.c,
       ...info,
-      timer: 11.0,
-      maxTimer: 11.0
+      timer: 12.0,
+      maxTimer: 12.0
     };
-    nextBonusTimer = 22.0; // Próximo bônus em 22s após este surgir
+    nextBonusTimer = 18.0; // Intervalo dinâmico de 18s
     sfxBonusSpawn();
     spawnSparkles(pos.c, pos.r, 20);
-    popups.push({ x: pos.c, y: pos.r, text: '!' + info.name, t: 1.2, color: '#FFC72C' });
+    popups.push({ x: pos.c, y: pos.r, text: '✨ ' + info.name, t: 1.5, color: '#FFC72C' });
   }
 
   function buildDots() {
