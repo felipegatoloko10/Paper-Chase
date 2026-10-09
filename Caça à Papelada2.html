@@ -919,6 +919,16 @@ input[type=range].vol-slider::-moz-range-thumb {
     if (g.dir.x) g.face = g.dir.x;
   }
 
+  function checkEating() {
+    if (state !== 'play') return;
+    const r = Math.round(hero.y);
+    const c = ((Math.round(hero.x) % W) + W) % W;
+    const d = Math.hypot(hero.x - c, hero.y - r);
+    if (d < 0.55) {
+      eatAt(r, c);
+    }
+  }
+
   function eatAt(r, c) {
     const key = r * W + c;
     const kind = dots.get(key);
@@ -1143,7 +1153,7 @@ input[type=range].vol-slider::-moz-range-thumb {
       const distHero = Math.hypot(hero.x - activeBonus.c, hero.y - activeBonus.r);
       const onSameTile = (Math.round(hero.x) === activeBonus.c && Math.round(hero.y) === activeBonus.r);
 
-      if (distHero < 0.90 || onSameTile) {
+      if (distHero < 1.15 || onSameTile) {
         const perk = activeBonus.perk;
         const bName = activeBonus.name;
         const bPts = activeBonus.pts;
@@ -1181,7 +1191,7 @@ input[type=range].vol-slider::-moz-range-thumb {
           popups.push({ x: bx, y: by, text: '📠 PAPELADA BANIDA 10s!', t: 2.0, color: '#FF4B3E' });
         } else if (perk === 'heal') {
           // 🍩 COXINHA DA FIRMA: Recupera vida se < 3, senão super bônus de pontos
-          if (lives < 3) {
+          if (lives < 4) {
             lives += 1;
             updateHud();
             popups.push({ x: bx, y: by, text: '🍩 +1 VIDA EXTRA!', t: 1.8, color: '#3FD68A' });
@@ -1235,6 +1245,7 @@ input[type=range].vol-slider::-moz-range-thumb {
       if (hero.dir.x) hero.face = hero.dir.x;
     }
     moveEntity(hero, heroSpeed(), dt, decideHero);
+    checkEating();
 
     for (const g of ghosts) {
       if (g.mode === 'waiting') {
@@ -1405,6 +1416,15 @@ input[type=range].vol-slider::-moz-range-thumb {
       ctx.fillStyle = p.color;
       ctx.fillText(p.text, p.x * s + s / 2, p.y * s);
       ctx.globalAlpha = 1;
+    }
+
+    // Indicador visual de Turbo Café
+    if (typeof coffeeTimer !== 'undefined' && coffeeTimer > 0) {
+      const cSec = coffeeTimer.toFixed(1);
+      ctx.fillStyle = '#FFC72C';
+      ctx.font = 'bold ' + Math.round(s * 0.52) + 'px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('☕ TURBO CAFÉ: ' + cSec + 's', (W * s) / 2, (frightUntil && clock < frightUntil) ? s * 1.55 : s * 0.85);
     }
 
     // Indicador visual de Pânico / Fuga dos Fantasmas no topo da tela
