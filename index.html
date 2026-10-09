@@ -935,7 +935,7 @@ input[type=range].vol-slider::-moz-range-thumb {
     else {
       addScore(50);
       combo = 0;
-      frightUntil = Math.max(frightUntil || 0, clock) + Math.max(3.5, 8 - (level - 1) * 0.8);
+      frightUntil = Math.max(frightUntil || 0, clock) + Math.max(1.8, 4.0 - (level - 1) * 0.4);
       reverseGhosts();
       popups.push({ x: c, y: r, text: 'PT LIBERADA!', t: 1.2, color: '#FFC72C' });
       sfxPhone();
@@ -1160,10 +1160,10 @@ input[type=range].vol-slider::-moz-range-thumb {
           popups.push({ x: bx, y: by, text: '☕ TURBO 8s ATIVADO!', t: 1.8, color: '#FFC72C' });
         } else if (perk === 'scare') {
           // 🪪 CRACHÁ VIP: Renova/Estende Fuga Geral dos Fantasmas por +10s
-          frightUntil = Math.max(frightUntil || 0, clock) + 10.0;
+          frightUntil = Math.max(frightUntil || 0, clock) + 5.0;
           combo = 0;
           reverseGhosts();
-          popups.push({ x: bx, y: by, text: '🪪 CRACHÁ: FUJAM 10s!', t: 1.8, color: '#4FC3F7' });
+          popups.push({ x: bx, y: by, text: '🪪 CRACHÁ: FUJAM 5s!', t: 1.8, color: '#4FC3F7' });
         } else if (perk === 'banish') {
           // 📠 FAX QUEBRADO: Bane e tranca todos os fantasmas na base por +10s
           for (let i = 0; i < ghosts.length; i++) {
